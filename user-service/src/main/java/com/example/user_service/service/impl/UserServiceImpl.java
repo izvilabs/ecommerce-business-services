@@ -21,8 +21,6 @@ import org.springframework.stereotype.Service;
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
 
-
-
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
@@ -113,6 +111,8 @@ public class UserServiceImpl implements UserService {
 
         RefreshToken storedToken = refreshTokenService.verifyRefreshToken(refreshToken);
 
+        refreshTokenService.revokeToken(storedToken.getToken());
+
         User user = storedToken.getUser();
 
         if (user.isBlocked()) {
@@ -127,9 +127,10 @@ public class UserServiceImpl implements UserService {
                         user.getRole().name()
                 );
 
+
         LoginResponseDTO loginResponseDTO = LoginResponseDTO.builder()
                         .accessToken(newAccessToken)
-                        .refreshToken(storedToken.getToken())
+                        .refreshToken(refreshTokenService.createRefreshToken(user))
                         .userId(user.getUserID())
                         .firstName(user.getFirstName())
                         .email(user.getEmail())
